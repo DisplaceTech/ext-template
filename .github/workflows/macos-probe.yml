@@ -4,14 +4,21 @@
 name: macOS probe
 on: workflow_dispatch
 jobs:
-  probe:
+  v2:
     runs-on: macos-14
-    strategy:
-      fail-fast: false
-      matrix:
-        setup: ['v2', '2.37.1', '2.36.0']
     steps:
-      - uses: shivammathur/setup-php@${{ matrix.setup }}
-        with:
-          php-version: '8.4'
+      - uses: shivammathur/setup-php@v2
+        with: {php-version: '8.4'}
+      - run: php -v
+  v2371:
+    runs-on: macos-14
+    steps:
+      - uses: shivammathur/setup-php@2.37.1
+        with: {php-version: '8.4'}
+      - run: php -v
+  v2360:
+    runs-on: macos-14
+    steps:
+      - uses: shivammathur/setup-php@2.36.0
+        with: {php-version: '8.4'}
       - run: php -v

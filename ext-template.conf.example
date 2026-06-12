@@ -1,0 +1,32 @@
+# Per-extension template configuration — copy to the extension repo root
+# as `.ext-template.conf`. Every key is required; values must not contain
+# newlines.
+
+# Extension name as PHP reports it (extension_loaded("...")); also the
+# cdylib name (lib<NAME>.so) and the PIE artifact prefix (php_<NAME>-...).
+NAME=example
+
+# PHP namespace segment: Displace\<NAMESPACE>\...
+NAMESPACE=Example
+
+# One-line crate/composer description.
+DESCRIPTION=PHP 8.3+ native example extension.
+
+# mdbook docs domain (GitHub Pages CNAME).
+DOCS_HOST=example.displace.tech
+
+# Stubs filename under stubs/ — usually <NAME>.stubs.php, but e.g.
+# ext-turbovec ships vector.stubs.php (file tracks the namespace).
+STUBS_FILE=example.stubs.php
+
+# apt packages the build needs on Linux runners (lint + test + release).
+APT_DEPS=cmake build-essential libclang-dev
+
+# Full macOS dependency command, or `true` when nothing is needed.
+BREW_INSTALL=brew install cmake
+
+# Extra RUSTFLAGS re-asserted on x86_64 RELEASE legs only. Setting
+# RUSTFLAGS in CI clobbers .cargo/config.toml's rustflags arrays, so any
+# codegen flag shipped binaries must keep goes here (e.g. ext-turbovec's
+# -C target-cpu=x86-64-v3). Leave empty when the extension has none.
+X86_RUSTFLAGS=

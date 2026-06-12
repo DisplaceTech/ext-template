@@ -1,0 +1,29 @@
+#!/bin/sh
+# Render a complete new-extension skeleton from the template.
+#
+#   bin/render <conf-file> <target-dir>
+#
+# <conf-file> is KEY=VALUE lines (see ext-template.conf.example). Both the
+# seed/ tree (rendered once, owned by the extension afterwards) and the
+# managed/ tree (kept in sync via bin/sync) are rendered.
+set -eu
+
+TEMPLATE_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+
+usage() { echo "usage: bin/render <conf-file> <target-dir>" >&2; exit 2; }
+
+[ $# -eq 2 ] || usage
+CONF=$1
+TARGET=$2
+[ -f "$CONF" ] || { echo "error: no such conf file: $CONF" >&2; exit 1; }
+
+# shellcheck source=/dev/null
+. "$TEMPLATE_ROOT/bin/lib.sh"
+
+mkdir -p "$TARGET"
+render_tree "$TEMPLATE_ROOT/template/seed" "$TARGET" "$CONF"
+render_tree "$TEMPLATE_ROOT/template/managed" "$TARGET" "$CONF"
+cp "$CONF" "$TARGET/.ext-template.conf"
+
+echo "rendered $(template_name "$CONF") into $TARGET"
+echo "next: git init, review, build — see ext-template README"

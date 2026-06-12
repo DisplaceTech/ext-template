@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  lint:
+    name: shellcheck + render smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck bin/render bin/sync bin/lib.sh
+
+      - name: Render smoke test
+        # Render the example conf and assert (a) every expected file
+        # lands, (b) no uppercase placeholder survives anywhere, and
+        # (c) the rendered workflows are valid YAML.
+        run: |
+          set -euo pipefail
+          bin/render ext-template.conf.example /tmp/ext-example
+          for f in Makefile build.rs about.toml about.hbs \
+                   .github/workflows/ci.yml .github/workflows/release.yml \
+                   .github/workflows/docs.yml \
+                   Cargo.toml composer.json src/lib.rs src/error.rs \
+                   .cargo/config.toml rust-toolchain.toml .ext-template.conf; do
+            test -f "/tmp/ext-example/$f" || { echo "missing $f"; exit 1; }
+          done
+          if grep -rnE '\{\{[A-Z_]+\}\}' /tmp/ext-example; then
+            echo "unrendered placeholders found"; exit 1
+          fi
+          python3 -c '
+          import sys, yaml
+          for p in ["/tmp/ext-example/.github/workflows/ci.yml",
+                    "/tmp/ext-example/.github/workflows/release.yml",
+                    "/tmp/ext-example/.github/workflows/docs.yml"]:
+              yaml.safe_load(open(p))
+              print("yaml ok:", p)
+          '
+
+      - name: Sync smoke test
+        # sync over a rendered tree must be a no-op (idempotent), and a
+        # template edit must propagate.
+        run: |
+          set -euo pipefail
+          cp -r /tmp/ext-example /tmp/ext-example-before
+          bin/sync /tmp/ext-example
+          diff -r /tmp/ext-example-before /tmp/ext-example
+          echo "# sync-propagation-canary" >> template/managed/Makefile
+          bin/sync /tmp/ext-example
+          grep -q 'sync-propagation-canary' /tmp/ext-example/Makefile
+          git checkout -- template/managed/Makefile

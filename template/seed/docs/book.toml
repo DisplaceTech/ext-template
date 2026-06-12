@@ -1,0 +1,11 @@
+[book]
+title       = "ext-{{NAME}}"
+description = "{{DESCRIPTION}}"
+authors     = ["Eric Mann"]
+language    = "en"
+src         = "src"
+
+[output.html]
+git-repository-url  = "https://github.com/DisplaceTech/ext-{{NAME}}"
+edit-url-template   = "https://github.com/DisplaceTech/ext-{{NAME}}/edit/main/docs/{path}"
+site-url            = "/"

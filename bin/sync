@@ -1,0 +1,33 @@
+#!/bin/sh
+# Re-render the template-managed files of an existing extension repo.
+#
+#   bin/sync <extension-repo-dir>
+#
+# Reads <dir>/.ext-template.conf and overwrites ONLY the managed/ tree
+# (Makefile, build.rs, about.*, .github/workflows/*). Everything else —
+# src/, Cargo.toml, .cargo/, rust-toolchain.toml, docs content — belongs
+# to the extension and is never touched. Run from a checkout of
+# ext-template; review the resulting diff in the extension repo before
+# committing.
+set -eu
+
+TEMPLATE_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+
+usage() { echo "usage: bin/sync <extension-repo-dir>" >&2; exit 2; }
+
+[ $# -eq 1 ] || usage
+TARGET=$1
+CONF=$TARGET/.ext-template.conf
+[ -d "$TARGET" ] || { echo "error: no such directory: $TARGET" >&2; exit 1; }
+[ -f "$CONF" ] || {
+    echo "error: $CONF not found — this repo hasn't adopted the template." >&2
+    echo "Create it from ext-template.conf.example first." >&2
+    exit 1
+}
+
+# shellcheck source=/dev/null
+. "$TEMPLATE_ROOT/bin/lib.sh"
+
+render_tree "$TEMPLATE_ROOT/template/managed" "$TARGET" "$CONF"
+
+echo "synced managed files for $(template_name "$CONF") — review with: git -C $TARGET diff"

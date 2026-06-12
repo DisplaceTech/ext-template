@@ -69,14 +69,18 @@ EXT_PATH      := $(CURDIR)/target/debug/lib{{NAME}}.$(EXT_SUFFIX)
 
 test: build $(RUN_TESTS_PHP)
 	@test -f "$(EXT_PATH)" || { echo "missing $(EXT_PATH) — run 'make build'"; exit 1; }
-	$(PHP) -d extension=$(EXT_PATH) \
+	$(PHP) -n -d extension=$(EXT_PATH) \
 		-r 'if (!extension_loaded("{{NAME}}")) { fwrite(STDERR, "{{NAME}} not loaded\n"); exit(1); }'
 	@# `run-tests.php` requires TEST_PHP_EXECUTABLE to be an *absolute* path
 	@# (it `file_exists()`-checks it), and parses TEST_PHP_ARGS by splitting
 	@# on single spaces — so the ini override must be `-d extension=path`,
 	@# not `-dextension=path`.
+	@# `-n` skips the system php.ini: a PIE-installed copy of this very
+	@# extension would otherwise double-load and fail every test with a
+	@# "module already loaded" warning. PHPTs may only rely on always-in
+	@# extensions (core, SPL, json) as a result.
 	TEST_PHP_EXECUTABLE=$$(command -v $(PHP)) \
-	TEST_PHP_ARGS="-d extension=$(EXT_PATH)" \
+	TEST_PHP_ARGS="-n -d extension=$(EXT_PATH)" \
 		$(PHP) $(RUN_TESTS_PHP) -q --show-diff tests/phpt
 
 stubs: check-cargo-php build

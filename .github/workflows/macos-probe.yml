@@ -1,0 +1,13 @@
+# Temporary diagnostic: minimal repro for the 2026-06-12 macOS setup-php
+# failures across the extension repos. Dispatch manually; delete when
+# upstream recovers.
+name: macOS probe
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: macos-14
+    steps:
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - run: php -v

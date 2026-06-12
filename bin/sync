@@ -4,11 +4,13 @@
 #   bin/sync <extension-repo-dir>
 #
 # Reads <dir>/.ext-template.conf and overwrites ONLY the managed/ tree
-# (Makefile, build.rs, about.*, .github/workflows/*). Everything else —
-# src/, Cargo.toml, .cargo/, rust-toolchain.toml, docs content — belongs
-# to the extension and is never touched. Run from a checkout of
-# ext-template; review the resulting diff in the extension repo before
-# committing.
+# (Makefile, build.rs, about.*, rust-toolchain.toml, the workflows),
+# then patches the template-governed version pins (rust-version,
+# ext-php-rs, thiserror) inside the extension's Cargo.toml from
+# template/versions.conf. Everything else — src/, the rest of
+# Cargo.toml, .cargo/, docs content — belongs to the extension and is
+# never touched. Run from a checkout of ext-template; review the
+# resulting diff in the extension repo before committing.
 set -eu
 
 TEMPLATE_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
@@ -29,5 +31,6 @@ CONF=$TARGET/.ext-template.conf
 . "$TEMPLATE_ROOT/bin/lib.sh"
 
 render_tree "$TEMPLATE_ROOT/template/managed" "$TARGET" "$CONF"
+apply_version_pins "$TARGET"
 
 echo "synced managed files for $(template_name "$CONF") — review with: git -C $TARGET diff"

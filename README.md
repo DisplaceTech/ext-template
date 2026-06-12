@@ -26,8 +26,16 @@ extensions render from it and re-sync when it improves.
 
 | Tree | Files | Lifecycle |
 |---|---|---|
-| `template/managed/` | Makefile, build.rs, about.toml/hbs, CI/release/docs workflows | **Owned by the template.** Re-rendered into extensions by `bin/sync`; never hand-edit in a child repo. |
-| `template/seed/` | Cargo.toml, composer.json, `.cargo/`, toolchain pin, src skeleton, docs skeleton, PLAN/RELEASE | **Rendered once** at creation, then owned by the extension. Sync never touches them. |
+| `template/managed/` | Makefile, build.rs, about.toml/hbs, rust-toolchain.toml, CI/release/docs workflows | **Owned by the template.** Re-rendered into extensions by `bin/sync`; never hand-edit in a child repo. |
+| `template/seed/` | Cargo.toml, composer.json, `.cargo/`, src skeleton, docs skeleton, PLAN/RELEASE | **Rendered once** at creation, then owned by the extension. Sync never touches them. |
+
+**Version bumps cascade.** `template/versions.conf` is the single
+source of truth for the Rust channel, the declared MSRV, and the crate
+pins every extension shares (`ext-php-rs`, `thiserror`). Bump a value
+there, run `bin/sync` against each extension, and the change lands in
+each child's `rust-toolchain.toml` (managed) and Cargo.toml (only those
+exact pin lines — the rest of Cargo.toml stays extension-owned). The
+floor is set by the most demanding extension; everyone rides it.
 
 Per-repo variance lives in each extension's `.ext-template.conf`
 (see [`ext-template.conf.example`](ext-template.conf.example)): name,

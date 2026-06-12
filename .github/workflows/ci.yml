@@ -58,3 +58,19 @@ jobs:
           bin/sync /tmp/ext-example
           grep -q 'sync-propagation-canary' /tmp/ext-example/Makefile
           git checkout -- template/managed/Makefile
+
+      - name: Version-pin cascade test
+        # versions.conf is the single source of truth: the rendered
+        # toolchain channel and Cargo.toml pins must match it, and a
+        # bumped pin must cascade into the child on sync.
+        run: |
+          set -euo pipefail
+          channel=$(sed -n 's/^RUST_CHANNEL=//p' template/versions.conf)
+          grep -q "channel    = \"$channel\"" /tmp/ext-example/rust-toolchain.toml
+          pin=$(sed -n 's/^EXT_PHP_RS_PIN=//p' template/versions.conf)
+          grep -q "ext-php-rs = \"$pin\"" /tmp/ext-example/Cargo.toml
+          sed -i 's/^EXT_PHP_RS_PIN=.*/EXT_PHP_RS_PIN==9.9.9/' template/versions.conf
+          bin/sync /tmp/ext-example
+          grep -q 'ext-php-rs = "=9.9.9"' /tmp/ext-example/Cargo.toml
+          grep -rq '=9.9.9' /tmp/ext-example/rust-toolchain.toml && exit 1 || true
+          git checkout -- template/versions.conf

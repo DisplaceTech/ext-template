@@ -2,7 +2,7 @@
 name          = "ext-{{NAME}}"
 version       = "0.0.0"
 edition       = "2021"
-rust-version  = "1.88"
+rust-version  = "{{RUST_VERSION}}"
 license       = "MIT"
 description   = "{{DESCRIPTION}}"
 repository    = "https://github.com/DisplaceTech/ext-{{NAME}}"
@@ -14,8 +14,8 @@ name       = "{{NAME}}"
 crate-type = ["cdylib"]
 
 [dependencies]
-ext-php-rs = "=0.15.13"
-thiserror  = "=2.0.18"
+ext-php-rs = "{{EXT_PHP_RS_PIN}}"
+thiserror  = "{{THISERROR_PIN}}"
 # Pin domain crates EXACTLY (=x.y.z) — upgrades are deliberate, tested bumps.
 
 [profile.release]

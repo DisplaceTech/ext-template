@@ -5,7 +5,7 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Extensions pick changes up with `bin/sync`; the version records which
 scaffold an extension was synced from.
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-10-29
 
 ### Added
 

@@ -1,0 +1,109 @@
+#!/bin/sh
+# Report pinned upstream crates that have fallen behind crates.io.
+#
+#   bin/upstream-check            # print a status line per crate
+#   bin/upstream-check --issues   # also open/update/close GitHub issues
+#
+# Reads template/upstream.conf. With --issues (the scheduled workflow),
+# keeps exactly one open issue labelled `upstream` per lagging crate in
+# the current repo (GH_REPO or the checkout's origin), updates its body
+# when crates.io moves again, and closes it once the pin catches up.
+# Needs curl and jq; --issues also needs an authenticated gh.
+set -eu
+
+TEMPLATE_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+CONF=$TEMPLATE_ROOT/template/upstream.conf
+VERSIONS=$TEMPLATE_ROOT/template/versions.conf
+UA="ext-template upstream-check (https://github.com/DisplaceTech/ext-template)"
+LABEL=upstream
+
+ISSUES=0
+case "${1:-}" in
+    --issues) ISSUES=1 ;;
+    '') ;;
+    *) echo "usage: bin/upstream-check [--issues]" >&2; exit 2 ;;
+esac
+
+# Print the exact version a Cargo.toml pins for crate $2, read from
+# stdin-less file $1. Handles `crate = "=1.2.3"` and
+# `crate = { version = "=1.2.3", ... }`.
+cargo_pin() {
+    sed -n "s/^$2[[:space:]]*=[[:space:]]*\(.*\)$/\1/p" "$1" | head -1 |
+        sed -e 's/.*version[[:space:]]*=[[:space:]]*//' \
+            -e 's/^"=\{0,1\}\([^"]*\)".*/\1/'
+}
+
+latest_stable() {
+    curl -fsSL -A "$UA" "https://crates.io/api/v1/crates/$1" |
+        jq -r '.crate.max_stable_version'
+}
+
+# True when $1 sorts strictly before $2 as a version.
+older_than() {
+    [ "$1" != "$2" ] &&
+        [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]
+}
+
+ensure_label() {
+    gh label create "$LABEL" --color 0e8a16 \
+        --description "A pinned upstream crate has a newer release" \
+        >/dev/null 2>&1 || true
+}
+
+# Number of the open upstream issue for crate $1, if any.
+open_issue() {
+    gh issue list --label "$LABEL" --state open --limit 100 \
+        --json number,title \
+        --jq ".[] | select(.title | startswith(\"upstream: $1 \")) | .number" |
+        head -1
+}
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+[ "$ISSUES" -eq 0 ] || ensure_label
+
+grep -v '^[[:space:]]*#' "$CONF" | grep -v '^[[:space:]]*$' |
+while read -r source crate key; do
+    if [ "$source" = versions.conf ]; then
+        pinned=$(sed -n "s/^$key==\{0,1\}//p" "$VERSIONS" | head -1)
+        where="ext-template template/versions.conf ($key)"
+    else
+        curl -fsSL "https://raw.githubusercontent.com/$source/HEAD/Cargo.toml" -o "$tmp"
+        pinned=$(cargo_pin "$tmp" "$crate")
+        where="$source Cargo.toml"
+    fi
+    latest=$(latest_stable "$crate")
+    if [ -z "$pinned" ] || [ -z "$latest" ] || [ "$latest" = null ]; then
+        echo "error: could not resolve $crate (pinned='$pinned' latest='$latest')" >&2
+        exit 1
+    fi
+
+    if older_than "$pinned" "$latest"; then
+        echo "BEHIND  $crate =$pinned -> $latest  ($where)"
+    else
+        echo "ok      $crate =$pinned  ($where)"
+    fi
+
+    [ "$ISSUES" -eq 1 ] || continue
+    number=$(open_issue "$crate")
+    if older_than "$pinned" "$latest"; then
+        title="upstream: $crate $latest available (pinned =$pinned)"
+        body="\`$crate\` **$latest** is the latest stable release on crates.io; $where pins **=$pinned**.
+
+Upstream bumps are deliberate, tested events, not Dependabot PRs. Before bumping:
+
+- read the changelog between the two versions (https://crates.io/crates/$crate/versions);
+- for ext-php-rs / thiserror: bump \`template/versions.conf\`, then \`bin/sync\` each extension and diff its regenerated stubs — any PHP signature change is a stop-and-decide;
+- for a primary upstream crate: follow that extension's RELEASE.md upstream-bump procedure (format compatibility, behavioural re-verification, THIRD-PARTY-NOTICES).
+
+Opened by the scheduled upstream watcher (\`bin/upstream-check --issues\`); it updates this issue if crates.io moves again and closes it once the pin catches up."
+        if [ -n "$number" ]; then
+            gh issue edit "$number" --title "$title" --body "$body" >/dev/null
+            echo "        updated #$number"
+        else
+            gh issue create --label "$LABEL" --title "$title" --body "$body"
+        fi
+    elif [ -n "$number" ]; then
+        gh issue close "$number" --comment "The pin is now =$pinned, which is current. Closing."
+    fi
+done

@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Weekly, so a template that silently stopped rendering (a runner or
+  # shellcheck change) surfaces before the next sync needs it.
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -18,7 +23,7 @@ jobs:
       - name: shellcheck
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck bin/render bin/sync bin/lib.sh
+          shellcheck bin/render bin/sync bin/lib.sh bin/upstream-check
 
       - name: Render smoke test
         # Render the example conf and assert (a) every expected file
@@ -29,8 +34,9 @@ jobs:
           bin/render ext-template.conf.example /tmp/ext-example
           for f in Makefile build.rs about.toml about.hbs \
                    .github/workflows/ci.yml .github/workflows/release.yml \
-                   .github/workflows/docs.yml \
+                   .github/workflows/docs.yml .github/dependabot.yml \
                    Cargo.toml composer.json src/lib.rs src/error.rs \
+                   README.md PLAN.md CHANGELOG.md RELEASE.md \
                    .cargo/config.toml rust-toolchain.toml .ext-template.conf; do
             test -f "/tmp/ext-example/$f" || { echo "missing $f"; exit 1; }
           done
@@ -41,7 +47,9 @@ jobs:
           import sys, yaml
           for p in ["/tmp/ext-example/.github/workflows/ci.yml",
                     "/tmp/ext-example/.github/workflows/release.yml",
-                    "/tmp/ext-example/.github/workflows/docs.yml"]:
+                    "/tmp/ext-example/.github/workflows/docs.yml",
+                    "/tmp/ext-example/.github/dependabot.yml",
+                    ".github/dependabot.yml"]:
               yaml.safe_load(open(p))
               print("yaml ok:", p)
           '
@@ -72,5 +80,5 @@ jobs:
           sed -i 's/^EXT_PHP_RS_PIN=.*/EXT_PHP_RS_PIN==9.9.9/' template/versions.conf
           bin/sync /tmp/ext-example
           grep -q 'ext-php-rs = "=9.9.9"' /tmp/ext-example/Cargo.toml
-          grep -rq '=9.9.9' /tmp/ext-example/rust-toolchain.toml && exit 1 || true
+          if grep -q '=9.9.9' /tmp/ext-example/rust-toolchain.toml; then exit 1; fi
           git checkout -- template/versions.conf

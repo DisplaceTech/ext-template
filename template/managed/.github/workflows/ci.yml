@@ -34,7 +34,7 @@ jobs:
     name: rustfmt + clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install system deps
         run: |
@@ -89,7 +89,7 @@ jobs:
           - { os: ubuntu-latest, php: '8.4', ts: zts }
           - { os: ubuntu-latest, php: '8.5', ts: zts }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install system deps (Linux)
         if: runner.os == 'Linux'

@@ -1,20 +1,22 @@
-# ext-{{NAME}} — plan
+# ext-{{NAME}} — design notes
 
-Living document. Status / surface description lives in `README.md`;
-how-to-cut-a-release lives in `RELEASE.md`.
+Design notes and decision history: why the surface looks the way it
+does, what was tried and rejected, and the constraints that bind future
+work. It is not a to-do list.
 
-## Status snapshot
+- Status and surface: `README.md`
+- What shipped, per release: `CHANGELOG.md`
+- Remaining work: [`future` issues](https://github.com/DisplaceTech/ext-{{NAME}}/issues?q=is%3Aissue+is%3Aopen+label%3Afuture)
+  (one issue per idea, with the reasoning and any locked constraint)
+- How to cut a release: `RELEASE.md`
 
-| Surface | Status |
-| --- | --- |
-| Scaffold (ext-template) | rendered |
+## Before building
 
-## Releases
+Propose the file tree, dependency list, and Rust-side ownership design
+(umbrella CLAUDE.md ground rule 5) and get it approved before building
+the surface.
 
-| Version | Date | Notes |
-| --- | --- | --- |
+## Decisions
 
-## Up next
-
-- [ ] Propose file tree + dependency list + Rust ownership design
-      (umbrella CLAUDE.md ground rule 5) before building.
+| Date | Decision | Why |
+| ---- | -------- | --- |

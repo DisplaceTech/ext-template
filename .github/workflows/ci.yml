@@ -36,6 +36,7 @@ jobs:
                    .github/workflows/ci.yml .github/workflows/release.yml \
                    .github/workflows/docs.yml .github/dependabot.yml \
                    Cargo.toml composer.json src/lib.rs src/error.rs \
+                   README.md PLAN.md CHANGELOG.md RELEASE.md \
                    .cargo/config.toml rust-toolchain.toml .ext-template.conf; do
             test -f "/tmp/ext-example/$f" || { echo "missing $f"; exit 1; }
           done

@@ -35,6 +35,7 @@ jobs:
           for f in Makefile build.rs about.toml about.hbs \
                    .github/workflows/ci.yml .github/workflows/release.yml \
                    .github/workflows/docs.yml .github/dependabot.yml \
+                   .github/scripts/stubs-check.php \
                    Cargo.toml composer.json src/lib.rs src/error.rs \
                    README.md PLAN.md CHANGELOG.md RELEASE.md \
                    .cargo/config.toml rust-toolchain.toml .ext-template.conf; do

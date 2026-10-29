@@ -111,9 +111,14 @@ track record. Release binaries stay NTS-only.
 
 ## Stubs
 
-Committed stubs are curated (generics, `@throws`, prose), so
-`make stubs` writes cargo-php's output to `target/<stubs file>` for a
-signature diff instead of overwriting them. On Linux, cargo-php's
+Committed stubs are curated (generics, `@throws`, prose) and must
+declare exactly what the extension registers. The managed CI enforces
+that on every leg: `.github/scripts/stubs-check.php` lists the built
+extension's classes and methods (finality, parents, interfaces,
+parameters, defaults, return types) and the stub file's, and the two
+listings must be identical; `make stubs-check` runs the same diff
+locally. `make stubs` writes cargo-php's raw output to
+`target/<stubs file>` as a starting point, never over the curated file. On Linux, cargo-php's
 `dlopen()` needs PHP's embed library preloaded
 (`make stubs STUBS_PRELOAD=/usr/lib/libphp8.4.so`); macOS needs nothing.
 

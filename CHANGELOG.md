@@ -5,6 +5,24 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Extensions pick changes up with `bin/sync`; the version records which
 scaffold an extension was synced from.
 
+## [0.2.2] - 2026-10-29
+
+### Added
+
+- **Stubs check.** `.github/scripts/stubs-check.php` prints a canonical
+  signature listing of the built extension and of `stubs/<file>` (classes,
+  finality, parents, interfaces, constants, method modifiers, parameters,
+  defaults, return types); the managed CI diffs the two on every leg and
+  `make stubs-check` runs the same locally. Curated stubs can no longer
+  drift from the registered classes. Skipped with a warning until an
+  extension has a stubs file.
+
+### Changed
+
+- Actions: `actions/checkout` v7, `configure-pages` v6, `deploy-pages` v5,
+  `upload-pages-artifact` v5, `softprops/action-gh-release` v3 (Node 24
+  runtime) — the first Dependabot batch.
+
 ## [0.2.1] - 2026-10-29
 
 ### Fixed
@@ -55,6 +73,7 @@ First release: the `template/managed/` and `template/seed/` trees,
 POSIX `bin/render` and `bin/sync`, per-repo `.ext-template.conf`, and
 the `versions.conf` pin cascade.
 
+[0.2.2]: https://github.com/DisplaceTech/ext-template/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/DisplaceTech/ext-template/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/DisplaceTech/ext-template/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DisplaceTech/ext-template/releases/tag/v0.1.0

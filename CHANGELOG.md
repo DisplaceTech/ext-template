@@ -5,6 +5,16 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Extensions pick changes up with `bin/sync`; the version records which
 scaffold an extension was synced from.
 
+## [0.2.1] - 2026-10-29
+
+### Fixed
+
+- Release builds export `GGML_NATIVE=OFF` on x86_64 legs, so a vendored
+  ggml (whisper.cpp) is built for ggml's portable AVX2 baseline instead
+  of the runner's CPU. The ubuntu-26.04 runners have AVX-512, and
+  ext-whisper 0.1.1's x86_64 binaries crashed with SIGILL on AVX2-only
+  CPUs.
+
 ## [0.2.0] - 2026-10-29
 
 ### Added
@@ -45,5 +55,6 @@ First release: the `template/managed/` and `template/seed/` trees,
 POSIX `bin/render` and `bin/sync`, per-repo `.ext-template.conf`, and
 the `versions.conf` pin cascade.
 
+[0.2.1]: https://github.com/DisplaceTech/ext-template/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/DisplaceTech/ext-template/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DisplaceTech/ext-template/releases/tag/v0.1.0

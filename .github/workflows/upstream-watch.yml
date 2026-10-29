@@ -1,0 +1,33 @@
+name: Upstream watch
+
+# Weekly check of the exactly-pinned crates Dependabot is told to ignore
+# (template/upstream.conf): ext-php-rs and thiserror (owned by
+# versions.conf) and each extension's primary upstream crate. One issue
+# labelled `upstream` per lagging crate, kept current and closed when the
+# pin catches up — so a bump is surfaced without an auto-PR that would
+# skip the format and behaviour checks those bumps need.
+#
+# GitHub disables scheduled workflows in public repos after 60 days with
+# no repository activity; Dependabot's weekly github-actions PRs on this
+# repo are what keep it alive.
+
+on:
+  schedule:
+    - cron: '41 6 * * 1'   # Mondays 06:41 UTC, after the extensions' CI
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare pins against crates.io
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bin/upstream-check --issues

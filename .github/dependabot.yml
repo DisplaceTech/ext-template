@@ -1,0 +1,24 @@
+# ext-template's own Dependabot config (not synced into extensions —
+# the extensions get template/managed/.github/dependabot.yml instead).
+#
+# github-actions is enabled for both this repo's workflows and the
+# managed workflow templates. A non-root `directory` makes Dependabot
+# scan the YAML files directly inside it (dependabot-core
+# github_actions/file_fetcher.rb: `workflows_dir = "."` for any
+# directory other than "/"), and the unrendered templates parse as
+# plain YAML because `{{PLACEHOLDER}}` is a valid flow mapping. A merged
+# action bump here reaches every extension on its next bin/sync.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /template/managed/.github/workflows
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(actions)"
+    groups:
+      actions:
+        patterns: ["*"]
